@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand/v2"
 	"os"
+	"path/filepath"
 )
 
+// Save new file through new file creation and swapping with original after updates process is finished
 func Save(path string, data []byte) error {
 	updatedFile := fmt.Sprintf("%s.tmp.%d", path, rand.Int64N(math.MaxInt64))
 
@@ -17,9 +20,13 @@ func Save(path string, data []byte) error {
 	}
 
 	defer func() {
-		fp.Close()
+		closeErr := fp.Close()
 
-		// remove updatedFile if any error encountered during whole process
+		if closeErr != nil {
+			log.Fatal(closeErr)
+		}
+
+		// remove temporary file if any error encountered during whole process
 		if err != nil {
 			os.Remove(updatedFile)
 		}
@@ -33,6 +40,59 @@ func Save(path string, data []byte) error {
 		return err
 	}
 
-	err = os.Rename(path, updatedFile)
+	err = os.Rename(updatedFile, path)
 	return err
 }
+
+// Sync directory after file creation/rename to ensure presence is persisted in the file system structure
+func SyncDirectory(directoryPath string) error {
+	directory, err := os.Open(directoryPath)
+
+	if err != nil {
+		return err
+	}
+
+	err = directory.Sync()
+
+	if err != nil {
+		return err
+	}
+
+	err = directory.Close()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return err
+}
+
+func main() {
+	homeDirectory, err := os.UserHomeDir()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbDirectory := filepath.Join(homeDirectory, "Documents")
+	filePath := filepath.Join(dbDirectory, "argentPage")
+
+	data, err := os.ReadFile(filePath)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = Save(filePath, append(data, []byte("\ntest data")...))
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = SyncDirectory(dbDirectory)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
