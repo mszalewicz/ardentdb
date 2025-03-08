@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"math"
 	"math/rand/v2"
 	"os"
@@ -23,7 +24,7 @@ func Save(path string, data []byte) error {
 		closeErr := fp.Close()
 
 		if closeErr != nil {
-			log.Fatal(closeErr)
+			slog.Error(closeErr.Error())
 		}
 
 		// remove temporary file if any error encountered during whole process
@@ -61,17 +62,35 @@ func SyncDirectory(directoryPath string) error {
 	err = directory.Close()
 
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error(err.Error())
 	}
 
 	return err
 }
 
 func main() {
+
+	currentDirectory, err := os.Getwd()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	logPath := filepath.Join(currentDirectory, "log")
+
+	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		slog.Error("Could not create log file.", "error", err)
+	}
+
+	loggerArgs := &slog.HandlerOptions{AddSource: true}
+	logger := slog.New(slog.NewJSONHandler(logFile, loggerArgs))
+	slog.SetDefault(logger)
+
 	homeDirectory, err := os.UserHomeDir()
 
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	dbDirectory := filepath.Join(homeDirectory, "Documents")
@@ -80,19 +99,18 @@ func main() {
 	data, err := os.ReadFile(filePath)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error(err.Error())
 	}
 
 	err = Save(filePath, append(data, []byte("\ntest data")...))
 
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error(err.Error())
 	}
 
 	err = SyncDirectory(dbDirectory)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error(err.Error())
 	}
 }
-
