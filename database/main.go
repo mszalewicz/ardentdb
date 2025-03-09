@@ -2,11 +2,33 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"math"
 	"math/rand/v2"
 	"os"
+	"path/filepath"
 )
+
+func init() {
+	currentDirectory, err := os.Getwd()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	logPath := filepath.Join(currentDirectory, "log")
+
+	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		slog.Error("Could not create log file.", "error", err)
+	}
+
+	loggerArgs := &slog.HandlerOptions{AddSource: true}
+	logger := slog.New(slog.NewJSONHandler(logFile, loggerArgs))
+	slog.SetDefault(logger)
+
+}
 
 // Save new file through new file creation and swapping with original after updates process is finished
 func Save(path string, data []byte) error {

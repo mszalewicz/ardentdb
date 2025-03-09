@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -10,22 +9,22 @@ import (
 )
 
 func main() {
-	currentDirectory, err := os.Getwd()
+	// currentDirectory, err := os.Getwd()
 
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
 
-	logPath := filepath.Join(currentDirectory, "log")
+	// logPath := filepath.Join(currentDirectory, "log")
 
-	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		slog.Error("Could not create log file.", "error", err)
-	}
+	// logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	// if err != nil {
+	// 	slog.Error("Could not create log file.", "error", err)
+	// }
 
-	loggerArgs := &slog.HandlerOptions{AddSource: true}
-	logger := slog.New(slog.NewJSONHandler(logFile, loggerArgs))
-	slog.SetDefault(logger)
+	// loggerArgs := &slog.HandlerOptions{AddSource: true}
+	// logger := slog.New(slog.NewJSONHandler(logFile, loggerArgs))
+	// slog.SetDefault(logger)
 
 	homeDirectory, err := os.UserHomeDir()
 
